@@ -1,14 +1,7 @@
 # ledsure
 
-A double-entry, event-sourced ledger and payments service built to **prove
-it stays correct under failure**: retries, crashes, and concurrent
-requests. Money is never created, lost, or double-charged.
-
-> **Status: M0 (Scaffold).** Only `/healthz` exists. Accounts, postings,
-> balances, and idempotency land in later milestones. The full README this
-> project is meant to have — architecture diagram, accounting model,
-> invariants table, `curl` walkthrough, retried-request GIF — arrives once
-> there is a ledger to demonstrate.
+A double-entry, event-sourced ledger and payments service built to prove
+it stays correct under failure. Money is never created, lost, or double-charged.
 
 ## Quickstart
 
@@ -22,12 +15,12 @@ curl http://localhost:8080/healthz
 
 | Path | Purpose |
 |---|---|
-| `cmd/ledsured/` | `main`: wiring only (config, logger, DB, router, server lifecycle) |
-| `internal/ledger/` | Domain types, validation, posting rules — pure, no I/O |
-| `internal/store/` | Postgres implementation (pgx) |
+| `cmd/ledsured/` | `main`: config, logger, DB, router, server lifecycle |
+| `internal/ledger/` | Domain types, validation, posting rules |
+| `internal/store/` | Postgres |
 | `internal/api/` | HTTP handlers, idempotency middleware, error mapping |
-| `internal/platform/` | `Clock`, `IDGenerator`, `Rand` seams + real implementations |
-| `migrations/` | goose SQL migrations, embedded into the binary |
+| `internal/platform/` | `Clock`, `IDGenerator`, `Rand` |
+| `migrations/` | goose SQL migrations |
 
 ## Development
 
