@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ledsure
+      POSTGRES_PASSWORD: ledsure
+      POSTGRES_DB: ledsure
+    ports:
+      - "5432:5432"
+    volumes:
+      - ledsure-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledsure -d ledsure"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ledsured:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LEDSURE_ADDR: ":8080"
+      LEDSURE_DATABASE_URL: "postgres://ledsure:ledsure@db:5432/ledsure?sslmode=disable"
+      LEDSURE_MIGRATE_ON_START: "true"
+      LEDSURE_LOG_LEVEL: "info"
+    ports:
+      - "8080:8080"
+
+volumes:
+  ledsure-db-data:
