@@ -1,0 +1,29 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - forbidigo
+    - errorlint
+    - bodyclose
+    - misspell
+  settings:
+    forbidigo:
+      analyze-types: true
+      forbid:
+        - pattern: '^time\.Now$'
+          msg: "use platform.Clock instead of time.Now so time stays injectable and replayable"
+        - pattern: '^uuid\.New.*$'
+          msg: "use platform.IDGenerator instead of uuid.New* so IDs stay injectable and replayable"
+        - pattern: '^math/rand\..*$'
+          msg: "use platform.Rand instead of math/rand so randomness stays injectable and replayable"
+  exclusions:
+    rules:
+      - path: 'internal/platform/'
+        linters:
+          - forbidigo
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
