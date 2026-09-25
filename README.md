@@ -4,12 +4,6 @@ A double-entry, event-sourced ledger and payments service built to **prove
 it stays correct under failure**: retries, crashes, and concurrent
 requests. Money is never created, lost, or double-charged.
 
-> **Status: M0 (Scaffold).** Only `/healthz` exists. Accounts, postings,
-> balances, and idempotency land in later milestones. The full README this
-> project is meant to have — architecture diagram, accounting model,
-> invariants table, `curl` walkthrough, retried-request GIF — arrives once
-> there is a ledger to demonstrate.
-
 ## Quickstart
 
 ```sh
