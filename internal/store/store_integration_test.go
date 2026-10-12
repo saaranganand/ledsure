@@ -5,7 +5,7 @@ package store
 import (
 	"context"
 	"testing"
-	
+
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
@@ -59,7 +59,7 @@ func TestStoreMigrate(t *testing.T) {
 
 	db := stdlib.OpenDBFromPool(s.pool)
 	t.Cleanup(func() {
-		if err:= db.Close(); err != nil {
+		if err := db.Close(); err != nil {
 			t.Logf("close migration db handle: %v", err)
 		}
 	})
