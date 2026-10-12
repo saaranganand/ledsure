@@ -8,8 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/saaranganand/ledsure/migrations"
 )
@@ -17,36 +15,7 @@ import (
 func TestStoreMigrate(t *testing.T) {
 	ctx := context.Background()
 
-	container, err := postgres.Run(ctx,
-		"postgres:18-alpine",
-		postgres.WithDatabase("ledsure"),
-		postgres.WithUsername("ledsure"),
-		postgres.WithPassword("ledsure"),
-		postgres.BasicWaitStrategies(),
-	)
-	if err != nil {
-		t.Fatalf("start postgres container: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := testcontainers.TerminateContainer(container); err != nil {
-			t.Logf("terminate postgres container: %v", err)
-		}
-	})
-
-	dsn, err := container.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		t.Fatalf("connection string: %v", err)
-	}
-
-	s, err := New(ctx, dsn)
-	if err != nil {
-		t.Fatalf("store.New: %v", err)
-	}
-	t.Cleanup(s.Close)
-
-	if err := RunMigrations(ctx, s); err != nil {
-		t.Fatalf("RunMigrations: %v", err)
-	}
+	s := newTestStore(t)
 
 	// var version int64
 	// row := s.pool.QueryRow(ctx, `SELECT version_id FROM goose_db_version ORDER BY id DESC LIMIT 1`)
