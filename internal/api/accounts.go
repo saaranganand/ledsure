@@ -79,3 +79,33 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, v any) error {
 	}
 	return nil
 }
+
+func (s *server) handleGetAccount(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "account id must be a UUID")
+		return
+	}
+
+	account, err := s.accounts.GetAccount(r.Context(), id)
+	if err != nil {
+		s.writeErr(w, r, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toAccountResponse(account))
+}
+
+func (s *server) handleListSystemAccounts(w http.ResponseWriter, r *http.Request) {
+	accounts, err := s.accounts.ListSystemAccounts(r.Context())
+	if err != nil {
+		s.writeErr(w, r, err)
+		return
+	}
+
+	resp := make([]accountResponse, 0, len(accounts))
+	for _, a := range accounts {
+		resp = append(resp, toAccountResponse(a))
+	}
+	writeJSON(w, http.StatusOK, resp)
+}

@@ -37,6 +37,8 @@ func NewRouter(d Deps) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
 	mux.HandleFunc("POST /v1/accounts", s.handleCreateAccount)
+	mux.HandleFunc("GET /v1/accounts/{id}", s.handleGetAccount)
+	mux.HandleFunc("GET /v1/system-accounts", s.handleListSystemAccounts)
 
 	return withLogging(d.Logger, mux)
 }
