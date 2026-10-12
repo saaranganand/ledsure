@@ -33,10 +33,10 @@ type server struct {
 
 func NewRouter(d Deps) http.Handler {
 	s := &server{logger: d.Logger, accounts: d.Accounts, clock: d.Clock, ids: d.IDs}
-	_ = s
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
+	mux.HandleFunc("POST /v1/accounts", s.handleCreateAccount)
 
 	return withLogging(d.Logger, mux)
 }
