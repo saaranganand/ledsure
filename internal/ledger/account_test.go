@@ -60,6 +60,7 @@ func TestNewCustomerAccount(t *testing.T) {
 		{name: "space only", input: " ", currency: CAD, wantErr: true},
 		{name: "200 chars", input: strings.Repeat("a", 200), currency: CAD, want: Account{ID: id, Name: strings.Repeat("a", 200), Currency: CAD, Kind: KindCustomer, CreatedAt: now}},
 		{name: "201 chars", input: strings.Repeat("a", 201), currency: CAD, wantErr: true},
+		{name: "200 multibyte chars", input: strings.Repeat("é", 200), currency: CAD, want: Account{ID: id, Name: strings.Repeat("é", 200), Currency: CAD, Kind: KindCustomer, CreatedAt: now}},
 		{name: "currency EUR", input: "John", currency: Currency("EUR"), wantErr: true},
 	}
 
