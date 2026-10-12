@@ -11,7 +11,7 @@ type Clock interface {
 type SystemClock struct{}
 
 func (SystemClock) Now() time.Time {
-	return time.Now().UTC().Truncate(time.Microsecond) // postgres timestamps have ms precision
+	return time.Now().UTC().Truncate(time.Microsecond) // postgres timestamps have microsecond precision
 }
 
 var _ Clock = SystemClock{}

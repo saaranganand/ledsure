@@ -15,7 +15,8 @@ linters:
           msg: "use platform.Clock instead of time.Now so time stays injectable and replayable"
         - pattern: '^uuid\.New.*$'
           msg: "use platform.IDGenerator instead of uuid.New* so IDs stay injectable and replayable"
-        - pattern: '^math/rand\..*$'
+        - pattern: '^rand\..*$'
+          pkg: '^math/rand(/v2)?$'
           msg: "use platform.Rand instead of math/rand so randomness stays injectable and replayable"
   exclusions:
     rules:

@@ -1,14 +1,12 @@
 package platform
 
-import (
-	uuid "github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
 type IDGenerator interface {
 	New() uuid.UUID
 }
 
-// v7 since it starts with 48 bit timestamp in ms - helps with sorting
+// v7 since it starts with 48 bit timestamp in microseconds - helps with sorting
 type UUIDv7Generator struct{}
 
 func (UUIDv7Generator) New() uuid.UUID {
