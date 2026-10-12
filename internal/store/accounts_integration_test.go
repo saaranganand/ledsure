@@ -122,4 +122,3 @@ func TestAccountConstraints(t *testing.T) {
 		t.Errorf("valid account rejected: %v", err)
 	}
 }
-

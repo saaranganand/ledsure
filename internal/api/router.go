@@ -1,18 +1,46 @@
 package api
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/google/uuid"
+
+	"github.com/saaranganand/ledsure/internal/ledger"
+	"github.com/saaranganand/ledsure/internal/platform"
 )
 
-func NewRouter(logger *slog.Logger) http.Handler {
+type AccountStore interface {
+	CreateAccount(ctx context.Context, a ledger.Account) error
+	GetAccount(ctx context.Context, id uuid.UUID) (ledger.Account, error)
+	ListSystemAccounts(ctx context.Context) ([]ledger.Account, error)
+}
+
+type Deps struct {
+	Logger   *slog.Logger
+	Accounts AccountStore
+	Clock    platform.Clock
+	IDs      platform.IDGenerator
+}
+
+type server struct {
+	logger   *slog.Logger
+	accounts AccountStore
+	clock    platform.Clock
+	ids      platform.IDGenerator
+}
+
+func NewRouter(d Deps) http.Handler {
+	s := &server{logger: d.Logger, accounts: d.Accounts, clock: d.Clock, ids: d.IDs}
+	_ = s
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
 
-	return withLogging(logger, mux)
+	return withLogging(d.Logger, mux)
 }
 
-// captures the status code; ResponseWriter has no getter for it
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
@@ -23,8 +51,6 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
-// one line per request: method, path, status
-// no duration: needs a clock seam that doesn't exist yet
 func withLogging(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}

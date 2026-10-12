@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/saaranganand/ledsure/internal/api"
+	"github.com/saaranganand/ledsure/internal/platform"
 	"github.com/saaranganand/ledsure/internal/store"
 )
 
@@ -49,8 +50,13 @@ func run() error {
 	}
 
 	server := &http.Server{
-		Addr:              cfg.addr,
-		Handler:           api.NewRouter(logger),
+		Addr: cfg.addr,
+		Handler: api.NewRouter(api.Deps{
+			Logger:   logger,
+			Accounts: db,
+			Clock:    platform.SystemClock{},
+			IDs:      platform.UUIDv7Generator{},
+		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
