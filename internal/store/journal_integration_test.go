@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// fail testcase: comment out entries_no_truncate in journal db migration befoer running
+// db itself must reject edits to the journal
 func TestJournalIsAppendOnly(t *testing.T) {
 	s := newTestStore(t)
 	ctx := context.Background()
