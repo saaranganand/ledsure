@@ -78,7 +78,7 @@ func NewTransaction(id uuid.UUID, now time.Time, desc string, entries []Entry) (
 		}
 	}
 
-	// the key here! sum should never be 0
+	// the key here! sum should always be 0
 	if sum != 0 {
 		return Transaction{}, fmt.Errorf("%w: entries sum to %d", ErrUnbalanced, sum)
 	}
