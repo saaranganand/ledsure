@@ -19,11 +19,23 @@ import (
 type fakeStore struct {
 	accounts map[uuid.UUID]ledger.Account
 	system   []ledger.Account
+	posted   map[uuid.UUID]ledger.Transaction
+	balances map[uuid.UUID]store.Balance
+	entries  map[uuid.UUID][]store.AccountEntry
 	err      error
+
+	// the paging arguments of the last ListEntries call, so tests can check query parsing
+	lastAfterSeq int64
+	lastLimit    int
 }
 
 func newFakeStore() *fakeStore {
-	return &fakeStore{accounts: map[uuid.UUID]ledger.Account{}}
+	return &fakeStore{
+		accounts: map[uuid.UUID]ledger.Account{},
+		posted:   map[uuid.UUID]ledger.Transaction{},
+		balances: map[uuid.UUID]store.Balance{},
+		entries:  map[uuid.UUID][]store.AccountEntry{},
+	}
 }
 
 func (f *fakeStore) CreateAccount(_ context.Context, a ledger.Account) error {
@@ -52,25 +64,75 @@ func (f *fakeStore) ListSystemAccounts(_ context.Context) ([]ledger.Account, err
 	return f.system, nil
 }
 
+func (f *fakeStore) PostTransaction(_ context.Context, tx ledger.Transaction) (ledger.Transaction, error) {
+	if f.err != nil {
+		return ledger.Transaction{}, f.err
+	}
+	tx.Seq = int64(len(f.posted) + 1)
+	f.posted[tx.ID] = tx
+	return tx, nil
+}
+
+func (f *fakeStore) GetTransaction(_ context.Context, id uuid.UUID) (ledger.Transaction, error) {
+	if f.err != nil {
+		return ledger.Transaction{}, f.err
+	}
+	tx, ok := f.posted[id]
+	if !ok {
+		return ledger.Transaction{}, store.ErrNotFound
+	}
+	return tx, nil
+}
+
+func (f *fakeStore) GetBalance(_ context.Context, accountID uuid.UUID) (store.Balance, error) {
+	if f.err != nil {
+		return store.Balance{}, f.err
+	}
+	b, ok := f.balances[accountID]
+	if !ok {
+		return store.Balance{}, store.ErrNotFound
+	}
+	return b, nil
+}
+
+func (f *fakeStore) ListEntries(_ context.Context, accountID uuid.UUID, afterSeq int64, limit int) ([]store.AccountEntry, error) {
+	f.lastAfterSeq, f.lastLimit = afterSeq, limit
+	if f.err != nil {
+		return nil, f.err
+	}
+	entries, ok := f.entries[accountID]
+	if !ok {
+		return nil, store.ErrNotFound
+	}
+	return entries, nil
+}
+
 type fakeClock struct{ now time.Time }
 
 func (c fakeClock) Now() time.Time { return c.now }
 
-type fakeIDs struct{ id uuid.UUID }
+// hands out testID, then testID+1, and so on, so every generated id is predictable
+type fakeIDs struct{ next byte }
 
-func (g fakeIDs) New() uuid.UUID { return g.id }
+func (g *fakeIDs) New() uuid.UUID {
+	id := testID
+	id[15] += g.next
+	g.next++
+	return id
+}
 
 var (
 	testID  = uuid.MustParse("00000000-0000-7000-8000-0000000000aa")
 	testNow = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 )
 
-func newTestRouter(s AccountStore) http.Handler {
+func newTestRouter(s *fakeStore) http.Handler {
 	return NewRouter(Deps{
 		Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Accounts: s,
+		Journal:  s,
 		Clock:    fakeClock{now: testNow},
-		IDs:      fakeIDs{id: testID},
+		IDs:      &fakeIDs{},
 	})
 }
 

@@ -48,10 +48,11 @@ func NewRouter(d Deps) http.Handler {
 	mux.HandleFunc("GET /healthz", handleHealthz)
 	mux.HandleFunc("POST /v1/accounts", s.handleCreateAccount)
 	mux.HandleFunc("GET /v1/accounts/{id}", s.handleGetAccount)
+	mux.HandleFunc("GET /v1/accounts/{id}/balance", s.handleGetBalance)
+	mux.HandleFunc("GET /v1/accounts/{id}/entries", s.handleListEntries)
 	mux.HandleFunc("GET /v1/system-accounts", s.handleListSystemAccounts)
 	mux.HandleFunc("POST /v1/transactions", s.handlePostTransaction)
 	mux.HandleFunc("GET /v1/transactions/{id}", s.handleGetTransaction)
-
 
 	return withLogging(d.Logger, mux)
 }
