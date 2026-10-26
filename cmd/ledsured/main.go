@@ -54,6 +54,7 @@ func run() error {
 		Handler: api.NewRouter(api.Deps{
 			Logger:   logger,
 			Accounts: db,
+			Journal: db,
 			Clock:    platform.SystemClock{},
 			IDs:      platform.UUIDv7Generator{},
 		}),

@@ -26,6 +26,15 @@ func (s *server) writeErr(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, ledger.ErrInvalidInput):
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case errors.Is(err, ledger.ErrUnbalanced):
+		writeError(w, http.StatusUnprocessableEntity, "unbalanced_transaction", err.Error())
+	case errors.Is(err, ledger.ErrCurrencyMismatch):
+		writeError(w, http.StatusUnprocessableEntity, "currency_mismatch", err.Error())
+	case errors.Is(err, ledger.ErrInsufficientFunds):
+		writeError(w, http.StatusUnprocessableEntity, "insufficient_funds", err.Error())
+	case errors.Is(err, ledger.ErrAccountNotFound):
+		writeError(w, http.StatusNotFound, "not_found", err.Error())
+
 	case errors.Is(err, store.ErrNotFound):
 		writeError(w, http.StatusNotFound, "not_found", "resource not found")
 	default:
