@@ -16,7 +16,7 @@ var ErrNotFound = errors.New("not found")
 const accountColumns = `id, name, currency, kind, code, allow_negative, created_at`
 
 func (s *Store) CreateAccount(ctx context.Context, a ledger.Account) error {
-	_, err := s.pool.Exec(ctx,
+	_, err := s.db(ctx).Exec(ctx,
 		`INSERT INTO accounts (`+accountColumns+`) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		a.ID, a.Name, a.Currency, a.Kind, a.Code, a.AllowNegative, a.CreatedAt,
 	)

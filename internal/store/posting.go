@@ -11,7 +11,7 @@ import (
 
 func (s *Store) PostTransaction(ctx context.Context, tx ledger.Transaction) (ledger.Transaction, error) {
 	// begin a db transaction
-	dbtx, err := s.pool.Begin(ctx)
+	dbtx, err := s.db(ctx).Begin(ctx)
 	if err != nil {
 		return ledger.Transaction{}, fmt.Errorf("store: post transaction: begin: %w", err)
 	}
