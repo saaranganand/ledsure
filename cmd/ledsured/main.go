@@ -52,11 +52,12 @@ func run() error {
 	server := &http.Server{
 		Addr: cfg.addr,
 		Handler: api.NewRouter(api.Deps{
-			Logger:   logger,
-			Accounts: db,
-			Journal:  db,
-			Clock:    platform.SystemClock{},
-			IDs:      platform.UUIDv7Generator{},
+			Logger:      logger,
+			Accounts:    db,
+			Journal:     db,
+			Idempotency: db,
+			Clock:       platform.SystemClock{},
+			IDs:         platform.UUIDv7Generator{},
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,

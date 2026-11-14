@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -25,12 +26,20 @@ type JournalStore interface {
 	ListEntries(ctx context.Context, accountID uuid.UUID, afterSeq int64, limit int) ([]store.AccountEntry, error)
 }
 
+// runs a request at most once per key and replays its stored response on retries
+type IdempotencyStore interface {
+	Idempotent(ctx context.Context, key string, requestHash []byte, now time.Time,
+		fn func(ctx context.Context) store.IdempotentResponse) (store.IdempotentResponse, error)
+}
+
 type Deps struct {
 	Logger   *slog.Logger
 	Accounts AccountStore
 	Clock    platform.Clock
 	IDs      platform.IDGenerator
 	Journal  JournalStore
+
+	Idempotency IdempotencyStore
 }
 
 type server struct {
@@ -39,19 +48,21 @@ type server struct {
 	clock    platform.Clock
 	ids      platform.IDGenerator
 	journal  JournalStore
+
+	idempotency IdempotencyStore
 }
 
 func NewRouter(d Deps) http.Handler {
-	s := &server{logger: d.Logger, accounts: d.Accounts, clock: d.Clock, ids: d.IDs, journal: d.Journal}
+	s := &server{logger: d.Logger, accounts: d.Accounts, clock: d.Clock, ids: d.IDs, journal: d.Journal, idempotency: d.Idempotency}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
-	mux.HandleFunc("POST /v1/accounts", s.handleCreateAccount)
+	mux.HandleFunc("POST /v1/accounts", s.idempotent(s.handleCreateAccount))
 	mux.HandleFunc("GET /v1/accounts/{id}", s.handleGetAccount)
 	mux.HandleFunc("GET /v1/accounts/{id}/balance", s.handleGetBalance)
 	mux.HandleFunc("GET /v1/accounts/{id}/entries", s.handleListEntries)
 	mux.HandleFunc("GET /v1/system-accounts", s.handleListSystemAccounts)
-	mux.HandleFunc("POST /v1/transactions", s.handlePostTransaction)
+	mux.HandleFunc("POST /v1/transactions", s.idempotent(s.handlePostTransaction))
 	mux.HandleFunc("GET /v1/transactions/{id}", s.handleGetTransaction)
 
 	return withLogging(d.Logger, mux)

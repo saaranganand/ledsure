@@ -1,7 +1,9 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -22,6 +24,7 @@ type fakeStore struct {
 	posted   map[uuid.UUID]ledger.Transaction
 	balances map[uuid.UUID]store.Balance
 	entries  map[uuid.UUID][]store.AccountEntry
+	keys     map[string]storedKey
 	err      error
 
 	// the paging arguments of the last ListEntries call, so tests can check query parsing
@@ -35,7 +38,29 @@ func newFakeStore() *fakeStore {
 		posted:   map[uuid.UUID]ledger.Transaction{},
 		balances: map[uuid.UUID]store.Balance{},
 		entries:  map[uuid.UUID][]store.AccountEntry{},
+		keys:     map[string]storedKey{},
 	}
+}
+
+type storedKey struct {
+	hash []byte
+	resp store.IdempotentResponse
+}
+
+// same contract as the real store, minus the database: replay on a matching hash, never store a 5xx
+func (f *fakeStore) Idempotent(ctx context.Context, key string, requestHash []byte, _ time.Time,
+	fn func(ctx context.Context) store.IdempotentResponse) (store.IdempotentResponse, error) {
+	if stored, ok := f.keys[key]; ok {
+		if !bytes.Equal(stored.hash, requestHash) {
+			return store.IdempotentResponse{}, store.ErrKeyReused
+		}
+		return stored.resp, nil
+	}
+	resp := fn(ctx)
+	if resp.Status < 500 {
+		f.keys[key] = storedKey{hash: requestHash, resp: resp}
+	}
+	return resp, nil
 }
 
 func (f *fakeStore) CreateAccount(_ context.Context, a ledger.Account) error {
@@ -128,18 +153,38 @@ var (
 
 func newTestRouter(s *fakeStore) http.Handler {
 	return NewRouter(Deps{
-		Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Accounts: s,
-		Journal:  s,
-		Clock:    fakeClock{now: testNow},
-		IDs:      &fakeIDs{},
+		Logger:      slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Accounts:    s,
+		Journal:     s,
+		Idempotency: s,
+		Clock:       fakeClock{now: testNow},
+		IDs:         &fakeIDs{},
 	})
 }
+
+// every POST through do gets a fresh key, so tests that aren't about retries never collide
+var testKeys int
 
 // sends 1 request through router and returns response
 func do(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	if method == http.MethodPost {
+		testKeys++
+		req.Header.Set("Idempotency-Key", fmt.Sprintf("test-key-%d", testKeys))
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec
+}
+
+// like do, but with a chosen Idempotency-Key (empty sends no header)
+func doWithKey(t *testing.T, h http.Handler, path, key, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
+	if key != "" {
+		req.Header.Set("Idempotency-Key", key)
+	}
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 	return rec
