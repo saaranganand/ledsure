@@ -12,18 +12,18 @@ var ErrKeyReused = errors.New("idempotency key reused with a different request")
 
 type IdempotentResponse struct {
 	Status int
-	Body []byte
+	Body   []byte
 }
 
-func (s *Store) Idempotent(ctx context.Context, key string, requestHash []byte, now time.Time, 
+func (s *Store) Idempotent(ctx context.Context, key string, requestHash []byte, now time.Time,
 	fn func(ctx context.Context) IdempotentResponse) (IdempotentResponse, error) {
 	dbtx, err := s.pool.Begin(ctx)
-	if err!=nil {
+	if err != nil {
 		return IdempotentResponse{}, fmt.Errorf("store: idempotent: begin: %w", err)
 	}
 	defer func() { _ = dbtx.Rollback(ctx) }()
 
-	tag, err := s.pool.Exec(ctx, 
+	tag, err := dbtx.Exec(ctx,
 		`INSERT INTO idempotency_keys (key, request_hash, created_at) VALUES ($1, $2, $3)
 		ON CONFLICT (key) DO NOTHING`,
 		key, requestHash, now,
@@ -40,7 +40,7 @@ func (s *Store) Idempotent(ctx context.Context, key string, requestHash []byte, 
 			FROM idempotency_keys WHERE key = $1`,
 			key,
 		).Scan(&storedHash, &stored.Status, &stored.Body)
-		if err!=nil {
+		if err != nil {
 			return IdempotentResponse{}, fmt.Errorf("store: idempotent: load stored response: %w", err)
 		}
 		if !bytes.Equal(storedHash, requestHash) {
@@ -65,6 +65,6 @@ func (s *Store) Idempotent(ctx context.Context, key string, requestHash []byte, 
 	if err := dbtx.Commit(ctx); err != nil {
 		return IdempotentResponse{}, fmt.Errorf("store: idempotent: commit: %w", err)
 	}
-	
+
 	return resp, nil
 }
