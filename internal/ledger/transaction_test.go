@@ -100,6 +100,8 @@ func TestNewTransaction(t *testing.T) {
 		{name: "too many entries", entries: manyEntries(maxEntries + 1), wantErr: ErrInvalidInput},
 		{name: "zero amount", entries: []Entry{entry(1, alice, 0), entry(2, bob, 0)}, wantErr: ErrInvalidInput},
 		{name: "amount above limit", entries: []Entry{entry(1, alice, -maxAmount-1), entry(2, bob, maxAmount+1)}, wantErr: ErrInvalidInput},
+		{name: "only the upper bound exceeded", entries: []Entry{entry(1, alice, maxAmount+1), entry(2, bob, -maxAmount), entry(3, revenue, -1)}, wantErr: ErrInvalidInput},
+		{name: "only the lower bound exceeded", entries: []Entry{entry(1, alice, -maxAmount-1), entry(2, bob, maxAmount), entry(3, revenue, 1)}, wantErr: ErrInvalidInput},
 		{name: "same account twice", entries: []Entry{entry(1, alice, -50), entry(2, alice, 50)}, wantErr: ErrInvalidInput},
 		{name: "unbalanced", entries: []Entry{entry(1, alice, -100), entry(2, bob, 99)}, wantErr: ErrUnbalanced},
 	}
