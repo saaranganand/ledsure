@@ -15,7 +15,7 @@ import (
 
 type DB struct {
 	Store *store.Store
-	Pool *pgxpool.Pool // assertions that query tables directly
+	Pool  *pgxpool.Pool // assertions that query tables directly
 }
 
 func New(t *testing.T) DB {

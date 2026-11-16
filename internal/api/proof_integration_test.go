@@ -213,7 +213,7 @@ func TestProofOverdraftRace(t *testing.T) {
 	if lowest < 0 {
 		t.Errorf("balance was observed at %d during the race", lowest)
 	}
-	
+
 	var minRunning int64
 	err := db.Pool.QueryRow(context.Background(), `
 		SELECT COALESCE(MIN(running), 0) FROM (
