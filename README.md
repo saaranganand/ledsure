@@ -7,8 +7,6 @@ A double-entry, event-sourced ledger and payments service built to prove it stay
 ## Quickstart
 
 ```sh
-docker compose up --build 
-# or
 make up
 
 curl http://localhost:8080/healthz
@@ -17,22 +15,13 @@ curl http://localhost:8080/healthz
 ./scripts/demo.sh # quick feature walkthrough
 ```
 
-## Project layout
-
-| Path | Purpose |
-|---|---|
-| `cmd/ledsure/` | `main`: config, logger, DB, router, server lifecycle |
-| `internal/ledger/` | Domain types, validation, posting rules |
-| `internal/store/` | Postgres |
-| `internal/api/` | HTTP handlers, idempotency middleware, error mapping |
-| `internal/platform/` | `Clock`, `IDGenerator`, `Rand` |
-| `migrations/` | goose SQL migrations |
-
 ## Architecture
 
-![...](assets/architecture.png)
+<img src="assets/architecture.png" alt="architecture" width="70%">
 
-## API Reference
+## Reference:
+
+### API
 
 | Method | Path | Description |
 |---|---|---|
@@ -45,7 +34,7 @@ curl http://localhost:8080/healthz
 | `POST` | `/v1/transactions` | {description, entries:[{acc_id, amount}]} -> 201 |
 | `GET` | `/v1/transactions/{tran_id}` | with entries |
 
-## Errors
+### Errors
 
 | Code | Description |
 |---|---|
@@ -54,7 +43,7 @@ curl http://localhost:8080/healthz
 | `409` | conflict |
 | `422` | insufficient funds, currency mismatch, unbalanced transaction |
 
-## Development
+## Dev
 
 ```sh
 make up
