@@ -1,5 +1,5 @@
 MODULE  := github.com/saaranganand/ledsure
-BINARY  := ledsured
+BINARY  := ledsure
 BIN_DIR := bin
 
 .PHONY: all
@@ -7,11 +7,11 @@ all: lint test build
 
 .PHONY: build
 build:
-	go build -trimpath -o $(BIN_DIR)/$(BINARY) ./cmd/ledsured
+	go build -trimpath -o $(BIN_DIR)/$(BINARY) ./cmd/ledsure
 
 .PHONY: run
 run:
-	go run ./cmd/ledsured
+	go run ./cmd/ledsure
 
 .PHONY: up
 up:
@@ -23,7 +23,7 @@ down:
 
 .PHONY: logs
 logs:
-	docker compose logs -f ledsured
+	docker compose logs -f ledsure
 
 .PHONY: psql
 psql:
@@ -50,13 +50,12 @@ fmt:
 tidy:
 	go mod tidy
 
-# applies migrations against the postgres from `make up`, then starts the server
-# ctrl+c once you see "migrations applied" — `make up` already does this automatically
+# applies migrations against the postgres from `make up`, then starts server
 .PHONY: migrate
 migrate:
 	LEDSURE_MIGRATE_ON_START=true \
 	LEDSURE_DATABASE_URL=$${LEDSURE_DATABASE_URL:-postgres://ledsure:ledsure@localhost:5432/ledsure?sslmode=disable} \
-	go run ./cmd/ledsured
+	go run ./cmd/ledsure
 
 .PHONY: ci
 ci: lint test test-integration

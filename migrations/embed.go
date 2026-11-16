@@ -1,4 +1,4 @@
-// embeds the goose SQL files into the ledsured binary
+// embeds the goose SQL files into the ledsure binary
 package migrations
 
 import "embed"

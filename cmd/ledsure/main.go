@@ -20,7 +20,7 @@ const shutdownTimeout = 10 * time.Second
 
 func main() {
 	if err := run(); err != nil {
-		slog.Error("ledsured: fatal", "error", err)
+		slog.Error("ledsure: fatal", "error", err)
 		os.Exit(1)
 	}
 }
@@ -67,7 +67,7 @@ func run() error {
 
 	serveErr := make(chan error, 1)
 	go func() {
-		logger.Info("ledsured: listening", "addr", cfg.addr)
+		logger.Info("ledsure: listening", "addr", cfg.addr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serveErr <- err
 			return
@@ -77,7 +77,7 @@ func run() error {
 
 	select {
 	case <-ctx.Done():
-		logger.Info("ledsured: shutting down")
+		logger.Info("ledsure: shutting down")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {

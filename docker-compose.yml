@@ -15,7 +15,7 @@ services:
       timeout: 3s
       retries: 10
 
-  ledsured:
+  ledsure:
     build: .
     depends_on:
       db:

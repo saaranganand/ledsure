@@ -1,21 +1,28 @@
 # ledsure
 
 A double-entry, event-sourced ledger and payments service built to prove
-it stays correct under failure. Money is never created, lost, or double-charged.
+it stays correct under failure. Money is never created, lost or double-charged, even with retries.
+
+![...](assets/demo.gif)
 
 ## Quickstart
 
 ```sh
-docker compose up --build
+docker compose up --build 
+# or
+make up
+
 curl http://localhost:8080/healthz
 # {"status":"ok"}
+
+./scripts/demo.sh # quick feature walkthrough
 ```
 
 ## Project layout
 
 | Path | Purpose |
 |---|---|
-| `cmd/ledsured/` | `main`: config, logger, DB, router, server lifecycle |
+| `cmd/ledsure/` | `main`: config, logger, DB, router, server lifecycle |
 | `internal/ledger/` | Domain types, validation, posting rules |
 | `internal/store/` | Postgres |
 | `internal/api/` | HTTP handlers, idempotency middleware, error mapping |
